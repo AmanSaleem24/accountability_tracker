@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AccountabilityPartner {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  email     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HabitEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String   // "SUCCESS" or "RELAPSE"
+  eventDate  DateTime @db.Date
+  occurredAt DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, eventDate])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  eventId   String
+  recipient String
+  type      String   // "EMAIL"
+  status    String   // "PENDING", "SENT", "FAILED"
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Milestone {
+  id         String   @id @default(cuid())
+  userId     String
+  type       String
+  achievedAt DateTime @default(now())
+
+  @@unique([userId, type])
+}
