@@ -13,14 +13,31 @@ export function CalendarTracker({ events }: CalendarTrackerProps) {
   const successDates = events.filter((e) => e.type === "SUCCESS").map((e) => new Date(e.eventDate));
   const relapseDates = events.filter((e) => e.type === "RELAPSE").map((e) => new Date(e.eventDate));
 
+  const isRelapseDate = (date: Date) => relapseDates.some((d) => isSameDay(d, date));
+
+  const isSuccessDate = (date: Date) => {
+    if (isRelapseDate(date)) return false;
+    if (successDates.some((d) => isSameDay(d, date))) return true;
+    
+    if (events.length > 0) {
+      const firstEventDate = new Date(events[events.length - 1].eventDate);
+      const today = new Date();
+      const timeToCheck = new Date(date).setHours(0, 0, 0, 0);
+      const startTime = new Date(firstEventDate).setHours(0, 0, 0, 0);
+      const endTime = new Date(today).setHours(0, 0, 0, 0);
+      return timeToCheck >= startTime && timeToCheck <= endTime;
+    }
+    return false;
+  };
+
   return (
     <Calendar
       mode="multiple"
       // We don't allow actual selection via internal state, we just display
-      selected={[...successDates, ...relapseDates]}
+      selected={[]}
       modifiers={{
-        success: successDates,
-        relapse: relapseDates,
+        success: isSuccessDate,
+        relapse: isRelapseDate,
       }}
       modifiersClassNames={{
         success: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 font-bold",
@@ -29,8 +46,8 @@ export function CalendarTracker({ events }: CalendarTrackerProps) {
       components={{
         DayButton: (props) => {
           // Find if this day has an event
-          const isSuccess = successDates.some(d => isSameDay(d, props.day.date));
-          const isRelapse = relapseDates.some(d => isSameDay(d, props.day.date));
+          const isSuccess = isSuccessDate(props.day.date);
+          const isRelapse = isRelapseDate(props.day.date);
           
           let content = null;
           if (isSuccess) content = "✓";
